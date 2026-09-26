@@ -1,128 +1,21 @@
---[[
-    Auto Plant 7 Carrots + Auto Favorite + Loop Selector
-    Based on depthso's autofarm.lua
-]]
-
---// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
---// Folders
-local GameEvents = ReplicatedStorage.GameEvents
-local Farms = workspace.Farm
+local GameEvents = ReplicatedStorage:WaitForChild("GameEvents")
+local Farms = workspace:WaitForChild("Farm")
 
---// Get Player's Farm
-local function GetFarm(PlayerName)
-    for _, Farm in pairs(Farms:GetChildren()) do
-        local Important = Farm:FindFirstChild("Important")
-        if not Important then continue end
-        local Data = Important:FindFirstChild("Data")
-        if not Data then continue end
-        local Owner = Data:FindFirstChild("Owner")
-        if Owner and Owner.Value == PlayerName then
-            return Farm
-        end
-    end
-    return nil
-end
-
---// Get Plant Locations
-local function GetPlantLocations()
-    local MyFarm = GetFarm(LocalPlayer.Name)
-    if not MyFarm then return {} end
-    local Important = MyFarm:FindFirstChild("Important")
-    if not Important then return {} end
-    local Locations = Important:FindFirstChild("Plant_Locations")
-    if not Locations then return {} end
-    return Locations:GetChildren()
-end
-
---// Plant Function
-local function Plant(Position, Seed)
-    GameEvents.Plant_RE:FireServer(Position, Seed)
-end
-
---// Get Area
-local function GetArea(Base)
-    local Center = Base:GetPivot()
-    local Size = Base.Size
-    local X1 = math.ceil(Center.X - (Size.X/2))
-    local Z1 = math.ceil(Center.Z - (Size.Z/2))
-    local X2 = math.floor(Center.X + (Size.X/2))
-    local Z2 = math.floor(Center.Z + (Size.Z/2))
-    return X1, Z1, X2, Z2
-end
-
---// ============================================
---// POSSIBLE FAVORITE REMOTE NAMES (Try one by one)
---// ============================================
-local FavoriteRemoteNames = {
-    "Favorite_RE",
-    "SetFavorite", 
-    "ToggleFavorite",
-    "MarkFavorite",
-    "PinPlant",
-    "StarPlant",
-    "FavoritePlant"
-}
-
-local FavoriteRemote = nil
-
---// Find Favorite Remote
-local function FindFavoriteRemote()
-    for _, name in ipairs(FavoriteRemoteNames) do
-        local remote = GameEvents:FindFirstChild(name)
-        if remote then
-            print("✅ Found Favorite Remote: " .. name)
-            return remote
-        end
-    end
-    
-    -- If not found, show all available remotes
-    print("❌ Favorite Remote not found. Available GameEvents:")
-    for _, obj in pairs(GameEvents:GetChildren()) do
-        print("  - " .. obj.Name)
-    end
-    return nil
-end
-
---// Favorite Function
-local function FavoritePlant(Plant)
-    if not FavoriteRemote then
-        FavoriteRemote = FindFavoriteRemote()
-    end
-    
-    if FavoriteRemote then
-        -- Try different argument patterns
-        pcall(function()
-            FavoriteRemote:FireServer(Plant, true)
-        end)
-        pcall(function()
-            FavoriteRemote:FireServer(Plant.Name, true)
-        end)
-        pcall(function()
-            FavoriteRemote:FireServer(Plant)
-        end)
-    end
-end
-
---// ============================================
---// SIMPLE UI (Mobile Friendly)
---// ============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Auto7Carrots"
 ScreenGui.Parent = PlayerGui
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 300, 0, 280)
-Frame.Position = UDim2.new(0.5, -150, 0.5, -140)
+Frame.Size = UDim2.new(0, 300, 0, 250)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -125)
 Frame.BackgroundColor3 = Color3.fromRGB(45, 95, 25)
-Frame.BorderSizePixel = 0
 Frame.Parent = ScreenGui
 
--- Title
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.Text = "Auto 7 Carrots + Favorite"
@@ -131,7 +24,6 @@ Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundColor3 = Color3.fromRGB(26, 20, 8)
 Title.Parent = Frame
 
--- Loop Count
 local LoopLabel = Instance.new("TextLabel")
 LoopLabel.Size = UDim2.new(1, 0, 0, 25)
 LoopLabel.Position = UDim2.new(0, 0, 0, 40)
@@ -148,7 +40,6 @@ LoopBox.BackgroundColor3 = Color3.fromRGB(69, 142, 40)
 LoopBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoopBox.Parent = Frame
 
--- Status
 local Status = Instance.new("TextLabel")
 Status.Size = UDim2.new(1, 0, 0, 30)
 Status.Position = UDim2.new(0, 0, 0, 100)
@@ -158,7 +49,6 @@ Status.TextColor3 = Color3.fromRGB(0, 255, 0)
 Status.BackgroundTransparency = 1
 Status.Parent = Frame
 
--- Progress
 local Progress = Instance.new("TextLabel")
 Progress.Size = UDim2.new(1, 0, 0, 25)
 Progress.Position = UDim2.new(0, 0, 0, 130)
@@ -168,7 +58,6 @@ Progress.TextColor3 = Color3.fromRGB(255, 255, 255)
 Progress.BackgroundTransparency = 1
 Progress.Parent = Frame
 
--- Buttons
 local StartBtn = Instance.new("TextButton")
 StartBtn.Size = UDim2.new(0.8, 0, 0, 35)
 StartBtn.Position = UDim2.new(0.1, 0, 0, 165)
@@ -187,16 +76,6 @@ StopBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 StopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 StopBtn.Parent = Frame
 
-local TestFavBtn = Instance.new("TextButton")
-TestFavBtn.Size = UDim2.new(0.8, 0, 0, 30)
-TestFavBtn.Position = UDim2.new(0.1, 0, 0, 245)
-TestFavBtn.Text = "Test Favorite"
-TestFavBtn.TextSize = 14
-TestFavBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 0)
-TestFavBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-TestFavBtn.Parent = Frame
-
--- Close Button
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 30, 0, 35)
 CloseBtn.Position = UDim2.new(1, -30, 0, 0)
@@ -205,122 +84,131 @@ CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Parent = Frame
 
---// Variables
 local IsRunning = false
 
---// Update Status
 local function UpdateStatus(msg)
     Status.Text = "Status: " .. msg
     print(msg)
 end
 
-local function UpdateProgress(current, total, action)
-    Progress.Text = string.format("%s: %d/%d", action, current, total)
+local function GetFarm()
+    for _, farm in pairs(Farms:GetChildren()) do
+        local important = farm:FindFirstChild("Important")
+        if important then
+            local data = important:FindFirstChild("Data")
+            if data then
+                local owner = data:FindFirstChild("Owner")
+                if owner and owner.Value == LocalPlayer.Name then
+                    return farm
+                end
+            end
+        end
+    end
+    return nil
 end
 
---// Plant 7 Carrots
-local function Plant7Carrots()
-    local locations = GetPlantLocations()
-    if #locations == 0 then
-        UpdateStatus("No farm found!")
-        return 0
+local function GetArea(Base)
+    local Center = Base:GetPivot()
+    local Size = Base.Size
+    local X1 = math.ceil(Center.X - (Size.X/2))
+    local Z1 = math.ceil(Center.Z - (Size.Z/2))
+    local X2 = math.floor(Center.X + (Size.X/2))
+    local Z2 = math.floor(Center.Z + (Size.Z/2))
+    return X1, Z1, X2, Z2
+end
+
+local function Plant(pos, seed)
+    GameEvents.Plant_RE:FireServer(pos, seed)
+end
+
+local function FindFavoriteRemote()
+    local names = {"Favorite_RE", "SetFavorite", "ToggleFavorite", "MarkFavorite", "PinPlant"}
+    for _, name in ipairs(names) do
+        local remote = GameEvents:FindFirstChild(name)
+        if remote then return remote end
     end
+    return nil
+end
+
+local FavoriteRemote = FindFavoriteRemote()
+
+local function FavoritePlant(plant)
+    if not FavoriteRemote then return end
+    pcall(function()
+        FavoriteRemote:FireServer(plant, true)
+    end)
+end
+
+local function Plant7()
+    local myFarm = GetFarm()
+    if not myFarm then UpdateStatus("No farm!") return 0 end
     
-    local dirt = locations[1]
+    local important = myFarm:FindFirstChild("Important")
+    local locations = important:FindFirstChild("Plant_Locations")
+    local dirt = locations:FindFirstChildOfClass("Part")
+    
+    if not dirt then UpdateStatus("No dirt!") return 0 end
+    
     local X1, Z1, X2, Z2 = GetArea(dirt)
+    local planted = 0
     
-    local positions = {}
     for X = X1, X2, 2 do
         for Z = Z1, Z2, 2 do
-            if #positions >= 7 then break end
-            table.insert(positions, Vector3.new(X, 0.13, Z))
+            if planted >= 7 or not IsRunning then break end
+            Plant(Vector3.new(X, 0.13, Z), "Carrot")
+            planted = planted + 1
+            Progress.Text = "Planting: " .. planted .. "/7"
+            wait(0.3)
         end
-        if #positions >= 7 then break end
+        if planted >= 7 then break end
     end
     
-    for i, pos in ipairs(positions) do
-        if not IsRunning then break end
-        Plant(pos, "Carrot")
-        UpdateProgress(i, 7, "Planting")
-        wait(0.3)
-    end
-    
-    return #positions
+    return planted
 end
 
---// Favorite 7 Plants
-local function Favorite7Plants()
-    local MyFarm = GetFarm(LocalPlayer.Name)
-    if not MyFarm then return 0 end
+local function Favorite7()
+    local myFarm = GetFarm()
+    if not myFarm then return 0 end
     
-    local Important = MyFarm:FindFirstChild("Important")
-    if not Important then return 0 end
-    
-    local PlantsPhysical = Important:FindFirstChild("Plants_Physical")
-    if not PlantsPhysical then return 0 end
+    local important = myFarm:FindFirstChild("Important")
+    local plants = important:FindFirstChild("Plants_Physical")
     
     local count = 0
-    for _, plant in pairs(PlantsPhysical:GetChildren()) do
-        if not IsRunning then break end
-        if count >= 7 then break end
-        
+    for _, plant in pairs(plants:GetChildren()) do
+        if count >= 7 or not IsRunning then break end
         FavoritePlant(plant)
         count = count + 1
-        UpdateProgress(count, 7, "Favoriting")
+        Progress.Text = "Favoriting: " .. count .. "/7"
         wait(0.2)
     end
     
     return count
 end
 
---// Main Loop
-local function RunScript()
+local function Run()
     if IsRunning then return end
-    
     local loops = tonumber(LoopBox.Text) or 1
     IsRunning = true
     
-    UpdateStatus("Starting " .. loops .. " loops...")
-    
     for i = 1, loops do
         if not IsRunning then break end
+        UpdateStatus("Loop " .. i .. "/" .. loops .. " - Planting")
         
-        UpdateStatus("Loop " .. i .. "/" .. loops)
+        if Plant7() == 0 then break end
+        wait(2)
         
-        -- Plant
-        local planted = Plant7Carrots()
-        if planted == 0 then
-            UpdateStatus("Planting failed!")
-            break
-        end
-        
-        wait(2) -- Wait for plants
-        
-        -- Favorite
-        UpdateStatus("Favoriting...")
-        Favorite7Plants()
-        
+        UpdateStatus("Loop " .. i .. "/" .. loops .. " - Favoriting")
+        Favorite7()
         wait(1)
     end
     
     IsRunning = false
-    UpdateStatus("Done! " .. loops .. " loops")
+    UpdateStatus("Done!")
+    Progress.Text = "Progress: 0/7"
 end
 
---// Test Favorite Only
-local function TestFavorite()
-    UpdateStatus("Testing Favorite...")
-    FavoriteRemote = FindFavoriteRemote()
-    if FavoriteRemote then
-        UpdateStatus("Favorite Remote found: " .. FavoriteRemote.Name)
-    else
-        UpdateStatus("Check console for available remotes")
-    end
-end
-
---// Button Events
 StartBtn.MouseButton1Click:Connect(function()
-    spawn(RunScript)
+    spawn(Run)
 end)
 
 StopBtn.MouseButton1Click:Connect(function()
@@ -328,14 +216,11 @@ StopBtn.MouseButton1Click:Connect(function()
     UpdateStatus("Stopped")
 end)
 
-TestFavBtn.MouseButton1Click:Connect(TestFavorite)
-
 CloseBtn.MouseButton1Click:Connect(function()
     IsRunning = false
     ScreenGui:Destroy()
 end)
 
---// Drag
 local dragging = false
 local dragStart, startPos
 
@@ -358,7 +243,5 @@ Frame.InputEnded:Connect(function()
     dragging = false
 end)
 
---// Initial Check
-print("=== AUTO 7 CARROTS + FAVORITE ===")
-print("Click 'Test Favorite' to find the Favorite Remote")
-UpdateStatus("Ready - Click Test Favorite first!")
+print("Auto 7 Carrots loaded!")
+print("Favorite Remote: " .. (FavoriteRemote and FavoriteRemote.Name or "NOT FOUND"))
